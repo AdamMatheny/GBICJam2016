@@ -10,6 +10,10 @@ public class PlayerController : MonoBehaviour
 
 	[SerializeField] private PlayerController mOtherPlayer;
 
+
+	[SerializeField] GameObject mWindowShardsRight;
+	[SerializeField] GameObject mWindowShardsLeft;
+
 	// Use this for initialization
 	void Start () 
 	{
@@ -70,7 +74,7 @@ public class PlayerController : MonoBehaviour
 	public void CounterHappened()
 	{
 		mFacingRight = !mFacingRight;
-		transform.Rotate(0,180,0);
+		GetComponent<SpriteRenderer>().flipX = !mFacingRight;
 	}
 
 
@@ -83,12 +87,34 @@ public class PlayerController : MonoBehaviour
 	IEnumerator MoveToNewPosition()
 	{
 		yield return new WaitForSeconds(0.1f);
-		while(Vector3.Distance(transform.position, mMatchController.mPositionSlots[mCurrentPosition].position)<0.1f)
+		while(Vector3.Distance(transform.position, mMatchController.mPositionSlots[mCurrentPosition].position)>0.2f)
 		{
-			transform.Translate(Vector3.Normalize(transform.position-mMatchController.mPositionSlots[mCurrentPosition].position)*Time.deltaTime);
+			Debug.Log("Moving " + gameObject.name + " over to position " + mCurrentPosition);
+			transform.Translate((mMatchController.mPositionSlots[mCurrentPosition].position-transform.position)*Time.deltaTime);
+			if(transform.position.x > 7.8f)
+			{
+				if(mCurrentPosition == 0 || mCurrentPosition == 9)
+				{
+					GetComponent<Animator>().Play("PlayerFall");
+				}
+				mWindowShardsRight.SetActive(true);
+			}
+			else if (transform.position.x < -7.8f)
+			{
+				if(mCurrentPosition == 0 || mCurrentPosition == 9)
+				{
+					GetComponent<Animator>().Play("PlayerFall");
+				}
+				mWindowShardsLeft.SetActive(true);
+			}
+			if(transform.position.x<-9f||transform.position.x>9f)
+			{
+				GetComponent<Rigidbody2D>().gravityScale=0.225f;
+			}
 			yield return new WaitForSeconds(Time.deltaTime);
 		}
 		transform.position = mMatchController.mPositionSlots[mCurrentPosition].position;
+
 	}
 
 

@@ -15,12 +15,18 @@ public class MatchController : MonoBehaviour
 	[SerializeField] PlayerController mPlayer1;
 	[SerializeField] PlayerController mPlayer2;
 
+	Animator mP1Animator;
+	Animator mP2Animator;
+
 	public Transform[] mPositionSlots;
+
 
 	// Use this for initialization
 	void Start () 
 	{
 		StartCoroutine(StartupSequence());
+		mP1Animator = mPlayer1.GetComponent<Animator>();
+		mP2Animator = mPlayer2.GetComponent<Animator>();
 	}
 	
 	// Update is called once per frame
@@ -40,6 +46,12 @@ public class MatchController : MonoBehaviour
 			}
 		}
 
+		if(mCurrentMatchState != eMatchState.GAMEOVER)
+		{
+			float playerMidpoint = (mPlayer1.transform.position.x+mPlayer2.transform.position.x)/2f;
+			playerMidpoint = Mathf.Clamp(playerMidpoint,-7.5f, 7.5f);
+			Camera.main.transform.position = new Vector3(playerMidpoint, 1.1f, -9.5f);
+		}
 	}
 
 	IEnumerator StartupSequence()
@@ -50,11 +62,11 @@ public class MatchController : MonoBehaviour
 
 	IEnumerator InputResolveSequence()
 	{
-		yield return new WaitForSeconds(0.5f);
+		yield return new WaitForSeconds(1f);
 		while(mP1Moves.Count >0 && mP2Moves.Count >0 && mCurrentMatchState==eMatchState.INPUTRESOLVE)
 		{
 			ComparePlayerMoves();
-			yield return new WaitForSeconds(1f);
+			yield return new WaitForSeconds(1.2f);
 			if(PlayerOutCheck())
 			{
 				mCurrentMatchState = eMatchState.GAMEOVER;
@@ -86,13 +98,19 @@ public class MatchController : MonoBehaviour
 				{
 				case ePlayerMove.CHARGE:
 					//nothing on a tie ~Adam
+					mP1Animator.Play("PlayerCharge");
+					mP2Animator.Play("PlayerCharge");
 					break;
 				case ePlayerMove.COUNTER:
+					mP1Animator.Play("PlayerCharge");
+					mP2Animator.Play("PlayerCounter");
 					mPlayer1.GetCountered();
 					mPlayer1.CounterHappened();
 					mPlayer2.CounterHappened();
 					break;
 				case ePlayerMove.UPPERCUT:
+					mP1Animator.Play("PlayerCharge");
+					mP2Animator.Play("PlayerKnockback");
 					mPlayer1.MoveForward();
 					mPlayer2.MoveBackward();
 					break;
@@ -102,14 +120,20 @@ public class MatchController : MonoBehaviour
 				switch (mP2Moves[0])
 				{
 				case ePlayerMove.CHARGE:
+					mP1Animator.Play("PlayerCounter");
+					mP2Animator.Play("PlayerCharge");
 					mPlayer2.GetCountered();
 					mPlayer1.CounterHappened();
 					mPlayer2.CounterHappened();
 					break;
 				case ePlayerMove.COUNTER:
 					//nothing on a tie ~Adam
+					mP1Animator.Play("PlayerCounter");
+					mP2Animator.Play("PlayerCounter");
 					break;
 				case ePlayerMove.UPPERCUT:
+					mP1Animator.Play("PlayerKnockback");
+					mP2Animator.Play("PlayerUppercut");
 					mPlayer1.MoveBackward();
 					mPlayer2.MoveForward();
 					break;
@@ -119,15 +143,21 @@ public class MatchController : MonoBehaviour
 				switch (mP2Moves[0])
 				{
 				case ePlayerMove.CHARGE:
+					mP1Animator.Play("PlayerKnockback");
+					mP2Animator.Play("PlayerCharge");
 					mPlayer1.MoveBackward();
 					mPlayer2.MoveForward();
 					break;
 				case ePlayerMove.COUNTER:
+					mP1Animator.Play("PlayerUppercut");
+					mP2Animator.Play("PlayerKnockback");
 					mPlayer1.MoveForward();
 					mPlayer2.MoveBackward();
 					break;
 				case ePlayerMove.UPPERCUT:
 					//nothing on a tie ~Adam
+					mP1Animator.Play("PlayerUppercut");
+					mP2Animator.Play("PlayerUppercut");
 					break;
 				}
 				break;
