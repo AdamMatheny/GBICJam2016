@@ -34,6 +34,7 @@ public class MatchController : MonoBehaviour
 
 	public Transform[] mPositionSlots;
 
+	Transform mLosingPlayerTransform;
 
 	// Use this for initialization
 	void Start () 
@@ -84,6 +85,15 @@ public class MatchController : MonoBehaviour
 			playerMidpoint = Mathf.Clamp(playerMidpoint,-7.5f, 7.5f);
 			Camera.main.transform.position = new Vector3(playerMidpoint, 1.1f, -9.5f);
 		}
+		else if (mLosingPlayerTransform != null)
+		{
+			if(Camera.main.transform.position.y > -2.45f)
+			{
+				Vector3 cameraTarget = new Vector3(mLosingPlayerTransform.position.x, mLosingPlayerTransform.position.y, -9.5f);
+				Camera.main.transform.Translate((cameraTarget-Camera.main.transform.position)*Time.deltaTime);
+			}
+		}
+
 	}
 
 	IEnumerator StartupSequence()
@@ -292,5 +302,11 @@ public class MatchController : MonoBehaviour
 	public int GetP2MoveCount()
 	{
 		return mP2Moves.Count;
+	}
+
+	//Get the position of the losing player so the camera can follow their fall ~Adam
+	public void SetLoserTransform(Transform loserTransform)
+	{
+		mLosingPlayerTransform = loserTransform;
 	}
 }

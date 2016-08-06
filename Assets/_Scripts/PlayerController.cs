@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour 
 {
@@ -13,6 +14,9 @@ public class PlayerController : MonoBehaviour
 
 	[SerializeField] GameObject mWindowShardsRight;
 	[SerializeField] GameObject mWindowShardsLeft;
+	[SerializeField] SpriteRenderer mWindowLeft;
+	[SerializeField] SpriteRenderer mWindowRight;
+	[SerializeField] Sprite mBrokenWindowSprite;
 
 	// Use this for initialization
 	void Start () 
@@ -86,26 +90,31 @@ public class PlayerController : MonoBehaviour
 
 	IEnumerator MoveToNewPosition()
 	{
+		Vector3 targetPosition = new Vector3(mMatchController.mPositionSlots[mCurrentPosition].position.x, transform.position.y, transform.position.z);
 		yield return new WaitForSeconds(0.1f);
 		while(Vector3.Distance(transform.position, mMatchController.mPositionSlots[mCurrentPosition].position)>0.2f)
 		{
-			Debug.Log("Moving " + gameObject.name + " over to position " + mCurrentPosition);
-			transform.Translate((mMatchController.mPositionSlots[mCurrentPosition].position-transform.position)*Time.deltaTime);
+			targetPosition = new Vector3(mMatchController.mPositionSlots[mCurrentPosition].position.x, transform.position.y, transform.position.z);
+			transform.Translate((targetPosition-transform.position)*Time.deltaTime);
 			#region When the player crosses the window, break it and turn on its particle effects, and start falling animation
 			if(transform.position.x > 7.8f)
 			{
+				mMatchController.SetLoserTransform(this.transform);
 				if(mCurrentPosition == 0 || mCurrentPosition == 9)
 				{
 					GetComponent<Animator>().Play("PlayerFall");
 				}
+				mWindowRight.sprite = mBrokenWindowSprite;
 				mWindowShardsRight.SetActive(true);
 			}
 			else if (transform.position.x < -7.8f)
 			{
+				mMatchController.SetLoserTransform(this.transform);
 				if(mCurrentPosition == 0 || mCurrentPosition == 9)
 				{
 					GetComponent<Animator>().Play("PlayerFall");
 				}
+				mWindowLeft.sprite = mBrokenWindowSprite;
 				mWindowShardsLeft.SetActive(true);
 			}
 			#endregion
@@ -116,11 +125,8 @@ public class PlayerController : MonoBehaviour
 			}
 			yield return new WaitForSeconds(Time.deltaTime);
 		}
-		//Only move towards the next position slot if not falling out the window ~Adam
-		if(GetComponent<Rigidbody2D>().gravityScale<2.5f)
-		{
-			transform.position = mMatchController.mPositionSlots[mCurrentPosition].position;
-		}
+		transform.position = targetPosition;
+
 
 	}
 
