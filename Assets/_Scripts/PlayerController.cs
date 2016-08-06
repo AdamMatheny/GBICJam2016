@@ -91,6 +91,7 @@ public class PlayerController : MonoBehaviour
 		{
 			Debug.Log("Moving " + gameObject.name + " over to position " + mCurrentPosition);
 			transform.Translate((mMatchController.mPositionSlots[mCurrentPosition].position-transform.position)*Time.deltaTime);
+			#region When the player crosses the window, break it and turn on its particle effects, and start falling animation
 			if(transform.position.x > 7.8f)
 			{
 				if(mCurrentPosition == 0 || mCurrentPosition == 9)
@@ -107,13 +108,19 @@ public class PlayerController : MonoBehaviour
 				}
 				mWindowShardsLeft.SetActive(true);
 			}
+			#endregion
+			//start actually falling ~Adam
 			if(transform.position.x<-9f||transform.position.x>9f)
 			{
-				GetComponent<Rigidbody2D>().gravityScale=0.225f;
+				GetComponent<Rigidbody2D>().gravityScale=0.5f;
 			}
 			yield return new WaitForSeconds(Time.deltaTime);
 		}
-		transform.position = mMatchController.mPositionSlots[mCurrentPosition].position;
+		//Only move towards the next position slot if not falling out the window ~Adam
+		if(GetComponent<Rigidbody2D>().gravityScale<2.5f)
+		{
+			transform.position = mMatchController.mPositionSlots[mCurrentPosition].position;
+		}
 
 	}
 

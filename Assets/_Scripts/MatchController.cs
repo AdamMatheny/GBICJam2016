@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class MatchController : MonoBehaviour 
 {
-	enum eMatchState {MATCHSTART, PLAYERINPUT, INPUTRESOLVE, GAMEOVER};
+	public enum eMatchState {MATCHSTART, PLAYERINPUT, INPUTRESOLVE, GAMEOVER};
 	enum ePlayerMove {CHARGE, COUNTER, UPPERCUT};
 
 	[SerializeField] private List<ePlayerMove> mP1Moves = new List<ePlayerMove>();
@@ -18,12 +18,44 @@ public class MatchController : MonoBehaviour
 	Animator mP1Animator;
 	Animator mP2Animator;
 
+	[SerializeField] private AudioSource mSFXSource;
+	[SerializeField] private AudioClip mUpperCutHit;
+	[SerializeField] private AudioClip mChargeHit;
+	[SerializeField] private AudioClip mCounterThrow;
+	[SerializeField] private AudioClip mPlayerInput;
+
+	[SerializeField] private AudioSource mBGMSource;
+	[SerializeField] private AudioClip[] mBGMTracks;
+
+	[SerializeField] private AudioSource mEndMatchJingleSource;
+
+	[SerializeField] private AudioSource mP1InputSFXSource;
+	[SerializeField] private AudioSource mP2InputSFXSource;
+
 	public Transform[] mPositionSlots;
 
 
 	// Use this for initialization
 	void Start () 
 	{
+		#region Make the BGM change every match ~Adam
+		Debug.Log("Current Track is: " + PlayerPrefs.GetInt("NextBGMTrack"));
+		if(PlayerPrefs.GetInt("NextBGMTrack") < mBGMTracks.Length && mBGMTracks.Length > 0)
+		{
+			mBGMSource.clip = mBGMTracks[PlayerPrefs.GetInt("NextBGMTrack")];
+			PlayerPrefs.SetInt("NextBGMTrack", PlayerPrefs.GetInt("NextBGMTrack")+1);
+			if(PlayerPrefs.GetInt("NextBGMTrack") >= mBGMTracks.Length)
+			{
+				PlayerPrefs.SetInt("NextBGMTrack", 0);
+			}
+		}
+		else
+		{
+			PlayerPrefs.SetInt("NextBGMTrack", 0);
+		}
+		mBGMSource.Play();
+		#endregion
+
 		StartCoroutine(StartupSequence());
 		mP1Animator = mPlayer1.GetComponent<Animator>();
 		mP2Animator = mPlayer2.GetComponent<Animator>();
@@ -84,7 +116,7 @@ public class MatchController : MonoBehaviour
 	IEnumerator GameOverSequence()
 	{
 		Debug.Log("Game Over!");
-		yield return new WaitForSeconds(3f);
+		yield return new WaitForSeconds(10f);
 		Application.LoadLevel(Application.loadedLevel);
 	}
 	void ComparePlayerMoves()
@@ -93,6 +125,7 @@ public class MatchController : MonoBehaviour
 		{
 			switch(mP1Moves[0])
 			{
+			#region resolutions if Player 1 Charges
 			case ePlayerMove.CHARGE:
 				switch (mP2Moves[0])
 				{
@@ -100,10 +133,12 @@ public class MatchController : MonoBehaviour
 					//nothing on a tie ~Adam
 					mP1Animator.Play("PlayerCharge");
 					mP2Animator.Play("PlayerCharge");
+					mSFXSource.PlayOneShot(mChargeHit);
 					break;
 				case ePlayerMove.COUNTER:
 					mP1Animator.Play("PlayerCharge");
 					mP2Animator.Play("PlayerCounter");
+					mSFXSource.PlayOneShot(mCounterThrow);
 					mPlayer1.GetCountered();
 					mPlayer1.CounterHappened();
 					mPlayer2.CounterHappened();
@@ -111,17 +146,21 @@ public class MatchController : MonoBehaviour
 				case ePlayerMove.UPPERCUT:
 					mP1Animator.Play("PlayerCharge");
 					mP2Animator.Play("PlayerKnockback");
+					mSFXSource.PlayOneShot(mUpperCutHit);
 					mPlayer1.MoveForward();
 					mPlayer2.MoveBackward();
 					break;
 				}
 				break;
+				#endregion
+				#region resolutions if Player 1 Counters
 			case ePlayerMove.COUNTER:
 				switch (mP2Moves[0])
 				{
 				case ePlayerMove.CHARGE:
 					mP1Animator.Play("PlayerCounter");
 					mP2Animator.Play("PlayerCharge");
+					mSFXSource.PlayOneShot(mCounterThrow);
 					mPlayer2.GetCountered();
 					mPlayer1.CounterHappened();
 					mPlayer2.CounterHappened();
@@ -130,27 +169,33 @@ public class MatchController : MonoBehaviour
 					//nothing on a tie ~Adam
 					mP1Animator.Play("PlayerCounter");
 					mP2Animator.Play("PlayerCounter");
+					mSFXSource.PlayOneShot(mCounterThrow);
 					break;
 				case ePlayerMove.UPPERCUT:
 					mP1Animator.Play("PlayerKnockback");
 					mP2Animator.Play("PlayerUppercut");
+					mSFXSource.PlayOneShot(mUpperCutHit);
 					mPlayer1.MoveBackward();
 					mPlayer2.MoveForward();
 					break;
 				}
 				break;
+				#endregion
+				#region resolutions if Player 1 Uppercuts
 			case ePlayerMove.UPPERCUT:
 				switch (mP2Moves[0])
 				{
 				case ePlayerMove.CHARGE:
 					mP1Animator.Play("PlayerKnockback");
 					mP2Animator.Play("PlayerCharge");
+					mSFXSource.PlayOneShot(mChargeHit);
 					mPlayer1.MoveBackward();
 					mPlayer2.MoveForward();
 					break;
 				case ePlayerMove.COUNTER:
 					mP1Animator.Play("PlayerUppercut");
 					mP2Animator.Play("PlayerKnockback");
+					mSFXSource.PlayOneShot(mUpperCutHit);
 					mPlayer1.MoveForward();
 					mPlayer2.MoveBackward();
 					break;
@@ -158,10 +203,13 @@ public class MatchController : MonoBehaviour
 					//nothing on a tie ~Adam
 					mP1Animator.Play("PlayerUppercut");
 					mP2Animator.Play("PlayerUppercut");
+					mSFXSource.PlayOneShot(mUpperCutHit);
 					break;
 				}
 				break;
+				#endregion
 			}
+			//Clean out the move that was just performed from the queue ~Adam
 			mP1Moves.RemoveAt(0);
 			mP2Moves.RemoveAt(0);
 		}
@@ -175,45 +223,74 @@ public class MatchController : MonoBehaviour
 			mPlayer2.GetCurrentPosition() ==0 || mPlayer2.GetCurrentPosition() == 9)
 		{
 			playerOut = true;
+			if(mBGMSource.isPlaying)
+			{
+				mBGMSource.Stop();
+				mEndMatchJingleSource.Play();
+			}
 		}
 		return playerOut;
 	}
 
 	void TakeP1Input()
 	{
+		//Don't take input if there are already three moves in the queue ~Adam
 		if(mP1Moves.Count<3)
 		{
 			if(Input.GetButtonDown("ChargeP1"))
 			{
 				mP1Moves.Add(ePlayerMove.CHARGE);
+				mP1InputSFXSource.Play();
 			}
 			else if(Input.GetButtonDown("CounterP1"))
 			{
 				mP1Moves.Add(ePlayerMove.COUNTER);
+				mP1InputSFXSource.Play();
 			}
 			if(Input.GetButtonDown("UppercutP1"))
 			{
 				mP1Moves.Add(ePlayerMove.UPPERCUT);
+				mP1InputSFXSource.Play();
 			}
 		}
 	}
 
 	void TakeP2Input()
 	{
+		//Don't take input if there are already three moves in the queue ~Adam
 		if(mP2Moves.Count<3)
 		{
 			if(Input.GetButtonDown("ChargeP2"))
 			{
 				mP2Moves.Add(ePlayerMove.CHARGE);
+				mP2InputSFXSource.Play();
 			}
 			else if(Input.GetButtonDown("CounterP2"))
 			{
 				mP2Moves.Add(ePlayerMove.COUNTER);
+				mP2InputSFXSource.Play();
 			}
 			if(Input.GetButtonDown("UppercutP2"))
 			{
 				mP2Moves.Add(ePlayerMove.UPPERCUT);
+				mP2InputSFXSource.Play();
 			}
+
 		}
+	}
+
+	public eMatchState GetMatchState()
+	{
+		return mCurrentMatchState;
+	}
+
+	//Return how many moves the players have in their queues ~Adam
+	public int GetP1MoveCount()
+	{
+		return mP1Moves.Count;
+	}
+	public int GetP2MoveCount()
+	{
+		return mP2Moves.Count;
 	}
 }
