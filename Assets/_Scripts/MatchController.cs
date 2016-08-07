@@ -36,6 +36,8 @@ public class MatchController : MonoBehaviour
 
 	Transform mLosingPlayerTransform;
 
+	[SerializeField] GameObject mRematchMessage;
+
 	// Use this for initialization
 	void Start () 
 	{
@@ -126,8 +128,9 @@ public class MatchController : MonoBehaviour
 	IEnumerator GameOverSequence()
 	{
 		Debug.Log("Game Over!");
-		yield return new WaitForSeconds(10f);
-		Application.LoadLevel(Application.loadedLevel);
+		yield return new WaitForSeconds(3f);
+		//Application.LoadLevel(Application.loadedLevel);
+		mRematchMessage.SetActive(true);
 	}
 	void ComparePlayerMoves()
 	{

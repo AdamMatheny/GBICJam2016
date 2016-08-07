@@ -30,6 +30,7 @@ public class StartSequenceController : MonoBehaviour
 	bool mCanStartGame = false;
 	bool mShowingControlsScreen = false;
 
+
 	// Use this for initialization
 	void Start () 
 	{
