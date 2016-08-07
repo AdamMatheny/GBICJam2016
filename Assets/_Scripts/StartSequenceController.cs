@@ -34,6 +34,7 @@ public class StartSequenceController : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
+		Cursor.visible = false;
 		StartCoroutine(StartupSequence());
 	}
 	

@@ -119,7 +119,7 @@ public class PlayerController : MonoBehaviour
 			}
 			#endregion
 			//start actually falling ~Adam
-			if(transform.position.x<-9f||transform.position.x>9f)
+			if((transform.position.x<-9f||transform.position.x>9f)&&transform.position.y > -1f)
 			{
 				GetComponent<Rigidbody2D>().gravityScale=0.5f;
 			}

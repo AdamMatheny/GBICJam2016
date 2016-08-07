@@ -89,11 +89,11 @@ public class MatchController : MonoBehaviour
 		}
 		else if (mLosingPlayerTransform != null)
 		{
-			if(Camera.main.transform.position.y > -2.45f)
-			{
+			//if(Camera.main.transform.position.y > -2.45f)
+			//{
 				Vector3 cameraTarget = new Vector3(mLosingPlayerTransform.position.x, mLosingPlayerTransform.position.y, -9.5f);
 				Camera.main.transform.Translate((cameraTarget-Camera.main.transform.position)*Time.deltaTime);
-			}
+			//}
 		}
 
 	}
